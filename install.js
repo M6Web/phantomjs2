@@ -24,7 +24,7 @@ var util = require('util')
 var which = require('which')
 var lsbRelease = require('lsb-release');
 
-var cdnUrl = process.env.PHANTOMJS_CDNURL || 'https://github.com/fdubost/phantomjs2/releases/download/'
+var cdnUrl = process.env.PHANTOMJS_CDNURL || 'https://github.com/M6Web/phantomjs2/releases/download/'
 var downloadUrl = cdnUrl + helper.version + '/phantomjs-' + helper.version + '-'
 
 var originalPath = process.env.PATH
