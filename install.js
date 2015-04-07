@@ -22,8 +22,9 @@ var rimraf = require('rimraf')
 var url = require('url')
 var util = require('util')
 var which = require('which')
+var lsbRelease = require('lsb-release');
 
-var cdnUrl = process.env.PHANTOMJS_CDNURL || 'https://github.com/bprodoehl/phantomjs/releases/download/'
+var cdnUrl = process.env.PHANTOMJS_CDNURL || 'https://github.com/fdubost/phantomjs2/releases/download/'
 var downloadUrl = cdnUrl + helper.version + '/phantomjs-' + helper.version + '-'
 
 var originalPath = process.env.PATH
@@ -102,30 +103,37 @@ whichDeferred.promise
     return npmconfDeferred.promise
   })
   .then(function (conf) {
-    tmpPath = findSuitableTempDirectory(conf)
+    var downloadDeferred = kew.defer()
+    lsbRelease(function (err, data) {
+      tmpPath = findSuitableTempDirectory(conf)
 
-    // Can't use a global version so start a download.
-    if (process.platform === 'linux' && process.arch === 'x64') {
-      downloadUrl += 'linux-x86_64.zip'
-    } else if (process.platform === 'darwin' || process.platform === 'openbsd' || process.platform === 'freebsd') {
-      downloadUrl += 'macosx.zip'
-    } else {
-      console.error('Unexpected platform or architecture:', process.platform, process.arch)
-      exit(1)
-    }
+      // Can't use a global version so start a download.
+      if (process.platform === 'linux' && process.arch === 'x64' && data.distributorID === 'Ubuntu' && data.release.indexOf('12.') === 0) {
+        downloadUrl += 'u1204-x86_64.zip'
+      } else if (process.platform === 'linux' && process.arch === 'x64' && data.distributorID === 'Ubuntu' && data.release.indexOf('14.') === 0) {
+        downloadUrl += 'u1404-x86_64.zip'
+      } else if (process.platform === 'darwin' || process.platform === 'openbsd' || process.platform === 'freebsd') {
+        downloadUrl += 'macosx.zip'
+      } else {
+        console.error('Unexpected platform or architecture:', process.platform, process.arch)
+        exit(1)
+      }
 
-    var fileName = downloadUrl.split('/').pop()
-    var downloadedFile = path.join(tmpPath, fileName)
+      var fileName = downloadUrl.split('/').pop()
+      var downloadedFile = path.join(tmpPath, fileName)
 
-    // Start the install.
-    if (!fs.existsSync(downloadedFile)) {
-      console.log('Downloading', downloadUrl)
-      console.log('Saving to', downloadedFile)
-      return requestBinary(getRequestOptions(conf), downloadedFile)
-    } else {
-      console.log('Download already available at', downloadedFile)
-      return downloadedFile
-    }
+      // Start the install.
+      if (!fs.existsSync(downloadedFile)) {
+        console.log('Downloading', downloadUrl)
+        console.log('Saving to', downloadedFile)
+        downloadDeferred.resolve(requestBinary(getRequestOptions(conf), downloadedFile));
+      } else {
+        console.log('Download already available at', downloadedFile)
+        downloadDeferred.resolve(downloadedFile);
+      }
+    });
+
+    return downloadDeferred.promise;
   })
   .then(function (downloadedFile) {
     return extractDownload(downloadedFile)
