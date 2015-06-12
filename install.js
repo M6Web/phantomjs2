@@ -108,9 +108,7 @@ whichDeferred.promise
       tmpPath = findSuitableTempDirectory(conf)
 
       // Can't use a global version so start a download.
-      if (process.platform === 'linux' && process.arch === 'x64' && data.distributorID === 'Ubuntu' && data.release.indexOf('12.') === 0) {
-        downloadUrl += 'u1204-x86_64.zip'
-      } else if (process.platform === 'linux' && process.arch === 'x64') {
+     if (process.platform === 'linux' && process.arch === 'x64') {
         downloadUrl += 'u1404-x86_64.zip'
       } else if (process.platform === 'darwin' || process.platform === 'openbsd' || process.platform === 'freebsd') {
         downloadUrl += 'macosx.zip'
